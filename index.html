@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VisionCraft AI - Unlimited Image Generation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #ec4899;
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --success: #10b981;
+            --warning: #f59e0b;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Animated background particles */
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(99, 102, 241, 0.3);
+            border-radius: 50%;
+            animation: float 20s infinite linear;
+        }
+
+        @keyframes float {
+            from {
+                transform: translateY(100vh) translateX(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            to {
+                transform: translateY(-100vh) translateX(100px);
+                opacity: 0;
+            }
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            animation: fadeInDown 0.8s ease;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+            letter-spacing: -2px;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-top: 1rem;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .badge::before {
+            content: "●";
+            color: var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            gap: 2rem;
+            align-items: start;
+        }
+
+        @media (max-width: 968px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+            h1 {
+                font-size: 2.5rem;
+            }
+        }
+
+        .control-panel {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 2rem;
+            position: sticky;
+            top: 2rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 1rem;
+            background: rgba(15, 23, 42, 0.6);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            color: var(--text);
+            font-size: 1rem;
+            resize: vertical;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        textarea::placeholder {
+            color: var(--text-muted);
+        }
+
+        .char-count {
+            text-align: right;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        .select-wrapper {
+            position: relative;
+        }
+
+        select {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            background: rgba(15, 23, 42, 0.6);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            color: var(--text);
+            font-size: 1rem;
+            cursor: pointer;
+            appearance: none;
+            transition: all 0.3s ease;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .select-wrapper::after {
+            content: "▼";
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            pointer-events: none;
+            font-size: 0.8rem;
+        }
+
+        .dimensions-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .slider-container {
+            margin-top: 0.5rem;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            background: var(--border);
+            border-radius: 3px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            background: var(--primary);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        .range-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        .generate-btn {
+            width: 100%;
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .generate-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 40px -10px rgba(99, 102, 241, 0.5);
+        }
+
+        .generate-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .generate-btn.loading {
+            color: transparent;
+        }
+
+        .generate-btn.loading::after {
+            content: "";
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            top: 50%;
+            left: 50%;
+            margin-left: -12px;
+            margin-top: -12px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .gallery-section {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 2rem;
+            min-height: 600px;
+        }
+
+        .gallery-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .gallery-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .clear-btn {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .clear-btn:hover {
+            background: rgba(239, 68, 68, 0.2);
+        }
+
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .image-card {
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+            animation: fadeInUp 0.5s ease;
+            position: relative;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .image-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5);
+            border-color: var(--primary);
+        }
+
+        .image-wrapper {
+            position: relative;
+            aspect-ratio: 1;
+            overflow: hidden;
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        }
+
+        .image-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .image-card:hover .image-wrapper img {
+            transform: scale(1.05);
+        }
+
+        .image-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s;
+            gap: 1rem;
+        }
+
+        .image-card:hover .image-overlay {
+            opacity: 1;
+        }
+
+        .action-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1.2rem;
+        }
+
+        .action-btn:hover {
+            background: var(--primary);
+            transform: scale(1.1);
+        }
+
+        .image-info {
+            padding: 1rem;
+        }
+
+        .prompt-text {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+            line-height: 1.4;
+        }
+
+        .image-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .model-tag {
+            background: rgba(99, 102, 241, 0.2);
+            color: var(--primary);
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.75rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-muted);
+        }
+
+        .empty-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            color: var(--text);
+            margin-bottom: 0.5rem;
+            font-size: 1.5rem;
+        }
+
+        .loading-skeleton {
+            background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+            border-radius: 16px;
+            aspect-ratio: 1;
+        }
+
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast.success {
+            border-left: 4px solid var(--success);
+        }
+
+        .toast.error {
+            border-left: 4px solid #ef4444;
+        }
+
+        .provider-toggle {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            background: rgba(15, 23, 42, 0.6);
+            padding: 0.25rem;
+            border-radius: 12px;
+        }
+
+        .provider-btn {
+            flex: 1;
+            padding: 0.75rem;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .provider-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .advanced-options {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+            cursor: pointer;
+        }
+
+        .checkbox-wrapper input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--primary);
+            cursor: pointer;
+        }
+
+        .checkbox-wrapper label {
+            margin: 0;
+            text-transform: none;
+            font-weight: 500;
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+
+        .seed-input {
+            width: 100%;
+            padding: 0.75rem;
+            background: rgba(15, 23, 42, 0.6);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 0.9rem;
+        }
+
+        .tips-section {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: rgba(99, 102, 241, 0.1);
+            border-radius: 12px;
+            border: 1px solid rgba(99, 102, 241, 0.2);
+        }
+
+        .tips-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .tips-list {
+            list-style: none;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .tips-list li {
+            margin-bottom: 0.25rem;
+            padding-left: 1rem;
+            position: relative;
+        }
+
+        .tips-list li::before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: var(--primary);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            max-width: 90%;
+            max-height: 90%;
+            position: relative;
+        }
+
+        .modal-content img {
+            max-width: 100%;
+            max-height: 85vh;
+            border-radius: 12px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: -40px;
+            right: 0;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.3s;
+        }
+
+        .modal-close:hover {
+            opacity: 1;
+        }
+
+        .modal-download {
+            position: absolute;
+            bottom: -50px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 2rem;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .modal-download:hover {
+            background: var(--primary-dark);
+            transform: translateX(-50%) translateY(-2px);
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                padding: 1rem;
+            }
+            .image-grid {
+                grid-template-columns: 1fr;
+            }
+            .gallery-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Background Animation -->
+    <div class="bg-animation" id="bgAnimation"></div>
+
+    <div class="container">
+        <header>
+            <h1>VisionCraft AI</h1>
+            <p class="subtitle">Transform your imagination into stunning visuals. No API keys required. Unlimited generations.</p>
+            <div class="badge">● Free & Unlimited</div>
+        </header>
+
+        <div class="main-grid">
+            <!-- Control Panel -->
+            <aside class="control-panel">
+                <div class="provider-toggle">
+                    <button class="provider-btn active" onclick="switchProvider('pollinations')">Pollinations</button>
+                    <button class="provider-btn" onclick="switchProvider('deepai')">DeepAI</button>
+                </div>
+
+                <div class="form-group">
+                    <label for="prompt">Describe Your Image</label>
+                    <textarea 
+                        id="prompt" 
+                        placeholder="A futuristic cyberpunk city at sunset with neon lights reflecting on wet streets, flying cars, and towering holographic advertisements..."
+                        maxlength="1000"
+                    ></textarea>
+                    <div class="char-count"><span id="charCount">0</span> / 1000</div>
+                </div>
+
+                <div class="form-group">
+                    <label>Aspect Ratio</label>
+                    <div class="select-wrapper">
+                        <select id="ratio">
+                            <option value="1:1">Square (1:1)</option>
+                            <option value="16:9" selected>Landscape (16:9)</option>
+                            <option value="9:16">Portrait (9:16)</option>
+                            <option value="4:3">Standard (4:3)</option>
+                            <option value="3:4">Portrait Standard (3:4)</option>
+                            <option value="21:9">Ultrawide (21:9)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group" id="modelGroup">
+                    <label>AI Model</label>
+                    <div class="select-wrapper">
+                        <select id="model">
+                            <option value="flux">Flux (Recommended)</option>
+                            <option value="turbo">Turbo (Fast)</option>
+                            <option value="stable-diffusion">Stable Diffusion</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="advanced-options">
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="enhance" checked>
+                        <label for="enhance">Auto-enhance prompt</label>
+                    </div>
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="nologo" checked>
+                        <label for="nologo">Remove watermark</label>
+                    </div>
+                    <div class="checkbox-wrapper" id="privateWrapper">
+                        <input type="checkbox" id="private">
+                        <label for="private">Private generation</label>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 1rem;">
+                    <label>Seed (Optional)</label>
+                    <input type="number" id="seed" class="seed-input" placeholder="Random">
+                </div>
+
+                <button class="generate-btn" id="generateBtn" onclick="generateImage()">
+                    Generate Image
+                </button>
+
+                <div class="tips-section">
+                    <div class="tips-title">💡 Pro Tips</div>
+                    <ul class="tips-list">
+                        <li>Be specific: "red sports car" vs "car"</li>
+                        <li>Add style: "digital art", "photorealistic"</li>
+                        <li>Describe lighting: "golden hour", "neon lights"</li>
+                        <li>Include mood: "mysterious", "cheerful"</li>
+                    </ul>
+                </div>
+            </aside>
+
+            <!-- Gallery Section -->
+            <section class="gallery-section">
+                <div class="gallery-header">
+                    <h2 class="gallery-title">Generated Images</h2>
+                    <button class="clear-btn" onclick="clearGallery()" id="clearBtn" style="display: none;">
+                        Clear All
+                    </button>
+                </div>
+                <div id="gallery" class="image-grid">
+                    <div class="empty-state">
+                        <div class="empty-icon">🎨</div>
+                        <h3>Start Creating</h3>
+                        <p>Enter a description and click generate to create your first AI masterpiece</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- Image Modal -->
+    <div class="modal" id="imageModal" onclick="closeModal(event)">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+            <img id="modalImage" src="" alt="Generated image">
+            <button class="modal-download" onclick="downloadModalImage()">Download Image</button>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">
+        <span id="toastIcon">✓</span>
+        <span id="toastMessage">Success!</span>
+    </div>
+
+    <script>
+        // State
+        let currentProvider = 'pollinations';
+        let generatedImages = JSON.parse(localStorage.getItem('visioncraft_images') || '[]');
+        let isGenerating = false;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            createBackgroundAnimation();
+            loadGallery();
+            setupEventListeners();
+        });
+
+        // Background Animation
+        function createBackgroundAnimation() {
+            const container = document.getElementById('bgAnimation');
+            for (let i = 0; i < 50; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 20 + 's';
+                particle.style.animationDuration = (15 + Math.random() * 10) + 's';
+                container.appendChild(particle);
+            }
+        }
+
+        // Event Listeners
+        function setupEventListeners() {
+            const prompt = document.getElementById('prompt');
+            const charCount = document.getElementById('charCount');
+            
+            prompt.addEventListener('input', (e) => {
+                charCount.textContent = e.target.value.length;
+            });
+
+            // Enter key to generate
+            prompt.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && e.metaKey) {
+                    generateImage();
+                }
+            });
+        }
+
+        // Switch Provider
+        function switchProvider(provider) {
+            currentProvider = provider;
+            document.querySelectorAll('.provider-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Show/hide model selector for Pollinations
+            const modelGroup = document.getElementById('modelGroup');
+            const privateWrapper = document.getElementById('privateWrapper');
+            
+            if (provider === 'pollinations') {
+                modelGroup.style.display = 'block';
+                privateWrapper.style.display = 'flex';
+            } else {
+                modelGroup.style.display = 'none';
+                privateWrapper.style.display = 'none';
+            }
+        }
+
+        // Get Dimensions from Ratio
+        function getDimensions(ratio) {
+            const base = 1024;
+            const ratios = {
+                '1:1': [base, base],
+                '16:9': [base, Math.round(base * 9/16)],
+                '9:16': [Math.round(base * 9/16), base],
+                '4:3': [base, Math.round(base * 3/4)],
+                '3:4': [Math.round(base * 3/4), base],
+                '21:9': [base, Math.round(base * 9/21)]
+            };
+            return ratios[ratio] || ratios['16:9'];
+        }
+
+        // Generate Image
+        async function generateImage() {
+            if (isGenerating) return;
+
+            const prompt = document.getElementById('prompt').value.trim();
+            if (!prompt) {
+                showToast('Please enter a description', 'error');
+                document.getElementById('prompt').focus();
+                return;
+            }
+
+            isGenerating = true;
+            const btn = document.getElementById('generateBtn');
+            btn.classList.add('loading');
+            btn.disabled = true;
+
+            try {
+                let imageUrl;
+                const seed = document.getElementById('seed').value || Math.floor(Math.random() * 1000000);
+                const [width, height] = getDimensions(document.getElementById('ratio').value);
+
+                if (currentProvider === 'pollinations') {
+                    const model = document.getElementById('model').value;
+                    const enhance = document.getElementById('enhance').checked;
+                    const nologo = document.getElementById('nologo').checked;
+                    const privateGen = document.getElementById('private').checked;
+
+                    const params = new URLSearchParams({
+                        width,
+                        height,
+                        seed,
+                        nologo: nologo ? 'true' : 'false',
+                        enhance: enhance ? 'true' : 'false',
+                        private: privateGen ? 'true' : 'false'
+                    });
+
+                    imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?${params}`;
+                } else {
+                    // DeepAI - Note: Requires API key for production use
+                    // For demo, we'll redirect to Pollinations as fallback
+                    showToast('DeepAI requires API key. Using Pollinations fallback...', 'error');
+                    const params = new URLSearchParams({
+                        width,
+                        height,
+                        seed,
+                        nologo: 'true',
+                        enhance: 'true'
+                    });
+                    imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?${params}`;
+                }
+
+                // Create placeholder
+                const imageData = {
+                    id: Date.now(),
+                    url: imageUrl,
+                    prompt: prompt,
+                    provider: currentProvider,
+                    model: currentProvider === 'pollinations' ? document.getElementById('model').value : 'deepai',
+                    timestamp: new Date().toLocaleString(),
+                    seed: seed
+                };
+
+                addImageToGallery(imageData, true);
+                
+                // Preload image to ensure it's ready
+                const img = new Image();
+                img.onload = () => {
+                    showToast('Image generated successfully!');
+                };
+                img.onerror = () => {
+                    showToast('Error loading image. Try again.', 'error');
+                };
+                img.src = imageUrl;
+
+                // Save to localStorage
+                generatedImages.unshift(imageData);
+                localStorage.setItem('visioncraft_images', JSON.stringify(generatedImages));
+
+                // Update UI
+                document.getElementById('clearBtn').style.display = 'block';
+
+            } catch (error) {
+                showToast('Error generating image: ' + error.message, 'error');
+            } finally {
+                isGenerating = false;
+                btn.classList.remove('loading');
+                btn.disabled = false;
+            }
+        }
+
+        // Add Image to Gallery
+        function addImageToGallery(imageData, isNew = false) {
+            const gallery = document.getElementById('gallery');
+            
+            // Remove empty state if exists
+            if (gallery.querySelector('.empty-state')) {
+                gallery.innerHTML = '';
+            }
+
+            const card = document.createElement('div');
+            card.className = 'image-card';
+            if (isNew) card.style.animation = 'fadeInUp 0.5s ease';
+            
+            card.innerHTML = `
+                <div class="image-wrapper">
+                    <img src="${imageData.url}" alt="${imageData.prompt}" loading="lazy" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22><rect width=%22100%22 height=%22100%22 fill=%22%23334155%22/><text x=%2250%22 y=%2250%22 text-anchor=%22middle%22 fill=%22%2394a3b8%22>Failed to load</text></svg>'">
+                    <div class="image-overlay">
+                        <button class="action-btn" onclick="viewImage('${imageData.url}')" title="View">👁</button>
+                        <button class="action-btn" onclick="downloadImage('${imageData.url}', ${imageData.id})" title="Download">⬇</button>
+                        <button class="action-btn" onclick="deleteImage(${imageData.id})" title="Delete">🗑</button>
+                    </div>
+                </div>
+                <div class="image-info">
+                    <p class="prompt-text">${escapeHtml(imageData.prompt)}</p>
+                    <div class="image-meta">
+                        <span class="model-tag">${imageData.provider} • ${imageData.model}</span>
+                        <span>${imageData.timestamp}</span>
+                    </div>
+                </div>
+            `;
+
+            gallery.insertBefore(card, gallery.firstChild);
+        }
+
+        // Load Gallery from Storage
+        function loadGallery() {
+            if (generatedImages.length > 0) {
+                document.getElementById('gallery').innerHTML = '';
+                generatedImages.forEach(img => addImageToGallery(img));
+                document.getElementById('clearBtn').style.display = 'block';
+            }
+        }
+
+        // View Image
+        function viewImage(url) {
+            const modal = document.getElementById('imageModal');
+            const modalImg = document.getElementById('modalImage');
+            modalImg.src = url;
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        // Close Modal
+        function closeModal(event) {
+            if (event && event.target !== event.currentTarget) return;
+            const modal = document.getElementById('imageModal');
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        // Download Image
+        async function downloadImage(url, id) {
+            try {
+                showToast('Downloading...');
+                const response = await fetch(url);
+                const blob = await response.blob();
+                const blobUrl = window.URL.createObjectURL(blob);
+                
+                const a = document.createElement('a');
+                a.href = blobUrl;
+                a.download = `visioncraft-${id}.png`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(blobUrl);
+                
+                showToast('Download complete!');
+            } catch (error) {
+                // Fallback: open in new tab
+                window.open(url, '_blank');
+            }
+        }
+
+        function downloadModalImage() {
+            const url = document.getElementById('modalImage').src;
+            downloadImage(url, Date.now());
+        }
+
+        // Delete Image
+        function deleteImage(id) {
+            generatedImages = generatedImages.filter(img => img.id !== id);
+            localStorage.setItem('visioncraft_images', JSON.stringify(generatedImages));
+            
+            // Re-render gallery
+            const gallery = document.getElementById('gallery');
+            gallery.innerHTML = '';
+            if (generatedImages.length === 0) {
+                gallery.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">🎨</div>
+                        <h3>Start Creating</h3>
+                        <p>Enter a description and click generate to create your first AI masterpiece</p>
+                    </div>
+                `;
+                document.getElementById('clearBtn').style.display = 'none';
+            } else {
+                generatedImages.forEach(img => addImageToGallery(img));
+            }
+            showToast('Image deleted');
+        }
+
+        // Clear Gallery
+        function clearGallery() {
+            if (confirm('Are you sure you want to clear all generated images?')) {
+                generatedImages = [];
+                localStorage.removeItem('visioncraft_images');
+                document.getElementById('gallery').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">🎨</div>
+                        <h3>Start Creating</h3>
+                        <p>Enter a description and click generate to create your first AI masterpiece</p>
+                    </div>
+                `;
+                document.getElementById('clearBtn').style.display = 'none';
+                showToast('Gallery cleared');
+            }
+        }
+
+        // Show Toast
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastIcon = document.getElementById('toastIcon');
+            const toastMessage = document.getElementById('toastMessage');
+            
+            toast.className = 'toast ' + type;
+            toastIcon.textContent = type === 'success' ? '✓' : '✕';
+            toastMessage.textContent = message;
+            
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>
